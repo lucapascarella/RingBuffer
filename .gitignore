@@ -1,5 +1,5 @@
 .DS_Store
-RingTest.xcodeproj/
+RingBuffer.xcodeproj/
 
 # Prerequisites
 *.d
