@@ -114,14 +114,16 @@ extern "C" {
     uint8_t * RING_GetTailPointer(const RING_DATA * const ring);
     
     // Write functions
+    bool RING_AddByte(RING_DATA * const ring, uint8_t val);
     size_t RING_AddBuffer(RING_DATA * const ring, uint8_t *buf, size_t size);
     uint8_t * RING_AddBufferDirectly(RING_DATA * const ring, size_t *toWrite, size_t size);
-    bool RING_AddByte(RING_DATA * const ring, uint8_t val);
     
     // Read functions
-    uint8_t * RING_GetLinearBuffer(RING_DATA * const ring, size_t *toRead, size_t size);
     bool RING_GetByte(RING_DATA * const ring, uint8_t *byte);
     uint8_t RING_GetByteSimple(RING_DATA * const ring);
+    size_t RING_GetBuffer(RING_DATA * const ring, uint8_t *ptr, size_t len);
+    uint8_t * RING_GetBufferDirectly(RING_DATA * const ring, size_t *toRead, size_t size);
+
     
     // Pick
     size_t RING_PickBytes(const RING_DATA *ring, uint8_t *buf, size_t len);

@@ -78,7 +78,7 @@ int main(int argc, const char * argv[]) {
     printf("\n");
     printf("Free space: %ld. Full space: %ld\n", RING_GetFreeSpace(ring), RING_GetFullSpace(ring));
     ptr1 = malloc(SPACE_SIZE);
-    buf = RING_GetLinearBuffer(ring, &readable, SPACE_SIZE/2);
+    buf = RING_GetBufferDirectly(ring, &readable, SPACE_SIZE/2);
     for(i=0; i<readable; i++)
         ptr1[i] = buf[i];
     printf("Readable: %ld, ", readable);
@@ -90,7 +90,7 @@ int main(int argc, const char * argv[]) {
     printf("Written: %ld of %ld, Free space: %ld, Full space: %ld\n", written, strlen(str2), RING_GetFreeSpace(ring), RING_GetFullSpace(ring));
     printf("Free linear space: %ld. Full linear space: %ld\n", RING_GetFreeLinearSpace(ring), RING_GetFullLinearSpace(ring));
     
-    buf = RING_GetLinearBuffer(ring, &readable, SPACE_SIZE);
+    buf = RING_GetBufferDirectly(ring, &readable, SPACE_SIZE);
     for(i=0; i<readable; i++)
         ptr1[i] = buf[i];
     printf("Readable: %ld, ", readable);

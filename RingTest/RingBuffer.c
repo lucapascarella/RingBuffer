@@ -353,6 +353,37 @@ inline uint8_t * RING_GetTailPointer(const RING_DATA * const ring) {
 }
 
 /*****************************************************************************
+ * Function:        RING_AddByte(RING_DATA * const ring, uint8_t val)
+ 
+ * Description:     This function tries to add a single byte into ring buffer.
+ 
+ * PreCondition:    RING_InitBuffer() must be successfully called
+ 
+ * Input:           ring the RING_DATA pre-allocated object
+ val the byte to write
+ 
+ * Return:          true if the byte is added succesfully
+ 
+ * Side Effects:    None
+ 
+ * Overview:        None
+ 
+ * Note:            None
+ *****************************************************************************/
+bool RING_AddByte(RING_DATA * const ring, uint8_t val) {
+    if (RING_GetFreeSpace(ring) > 0) {
+        ring->buf[ring->head] = val;
+#ifdef POWER_2_OPTIMIZATION
+        ring->head = (ring->head + 1) & (ring->size - 1);
+#else
+        ring->head = (ring->head + 1) % ring->size;
+#endif
+        return true;
+    }
+    return false;
+}
+
+/*****************************************************************************
  * Function:        RING_AddBuffer(RING_DATA * const ring, uint8_t *buf, size_t size)
  
  * Description:     This function internally copies the given buffer.
@@ -421,73 +452,6 @@ uint8_t * RING_AddBufferDirectly(RING_DATA * const ring, size_t *toWrite, size_t
 }
 
 /*****************************************************************************
- * Function:        RING_AddByte(RING_DATA * const ring, uint8_t val)
- 
- * Description:     This function tries to add a single byte into ring buffer.
- 
- * PreCondition:    RING_InitBuffer() must be successfully called
- 
- * Input:           ring the RING_DATA pre-allocated object
-                    val the byte to write
- 
- * Return:          true if the byte is added succesfully
- 
- * Side Effects:    None
- 
- * Overview:        None
- 
- * Note:            None
- *****************************************************************************/
-bool RING_AddByte(RING_DATA * const ring, uint8_t val) {
-    if (RING_GetFreeSpace(ring) > 0) {
-        ring->buf[ring->head] = val;
-#ifdef POWER_2_OPTIMIZATION
-        ring->head = (ring->head + 1) & (ring->size - 1);
-#else
-        ring->head = (ring->head + 1) % ring->size;
-#endif
-        return true;
-    }
-    return false;
-}
-
-/*****************************************************************************
- * Function:        RING_GetLinearBuffer(RING_DATA * const ring, size_t *toRead, size_t size)
- 
- * Description:     This function returns a pointer of a linear filled space
- 
- * PreCondition:    RING_InitBuffer() must be successfully called
- 
- * Input:           ring the RING_DATA pre-allocated object
- val the byte to write
- 
- * Return:          true if the byte is added succesfully
- 
- * Side Effects:    None
- 
- * Overview:        None
- 
- * Note:            None
- *****************************************************************************/
-uint8_t * RING_GetLinearBuffer(RING_DATA * const ring, size_t *toRead, size_t size) {
-    uint8_t *ptr;
-    size_t readable;
-    
-    readable = RING_GetFullLinearSpace(ring);
-    
-    *toRead = min(readable, size);
-    ptr = &ring->buf[ring->tail];
-#ifdef POWER_2_OPTIMIZATION
-    ring->tail = (ring->tail + *toRead) & (ring->size - 1);
-#else
-    ring->tail = (ring->tail + *toRead) % ring->size;
-#endif
-    
-    return ptr;
-}
-
-/* Returns a byte if present */
-/*****************************************************************************
  * Function:        RING_GetByte(RING_DATA * const ring, uint8_t *byte)
  
  * Description:     This function returns a byte if available
@@ -495,7 +459,7 @@ uint8_t * RING_GetLinearBuffer(RING_DATA * const ring, size_t *toRead, size_t si
  * PreCondition:    RING_InitBuffer() must be successfully called
  
  * Input:           ring the RING_DATA pre-allocated object
-                    byte* readback byta
+ byte* readback byta
  
  * Return:          true if the byte is read
  
@@ -548,6 +512,78 @@ inline uint8_t RING_GetByteSimple(RING_DATA * const ring) {
 }
 
 /*****************************************************************************
+ * Function:        RING_GetBuffer(RING_DATA * const ring, uint8_t *ptr, size_t len)
+ 
+ * Description:     This function gets len bytes into user buffer
+ 
+ * PreCondition:    RING_InitBuffer() must be successfully called
+ 
+ * Input:           ring the RING_DATA pre-allocated object
+                    ptr user destination buffer
+                    len user destination length
+ 
+ * Return:          the actual number of got bytes
+ 
+ * Side Effects:    None
+ 
+ * Overview:        None
+ 
+ * Note:            None
+ *****************************************************************************/
+size_t RING_GetBuffer(RING_DATA * const ring, uint8_t *ptr, size_t len){
+    
+    size_t i, min;
+    
+    min = min(RING_GetFullSpace(ring), len);
+    
+    for (i = 0; i < min; i++) {
+        ptr[i] = ring->buf[ring->tail];
+#ifdef POWER_2_OPTIMIZATION
+        ring->tail = (ring->tail + 1) & (ring->size - 1);
+#else
+        ring->tail = (ring->tail + 1) % ring->size;
+#endif
+    }
+    
+    return i;
+}
+
+/*****************************************************************************
+ * Function:        RING_GetBufferDirectly(RING_DATA * const ring, size_t *toRead, size_t size)
+ 
+ * Description:     This function returns a pointer of a linear filled space
+ 
+ * PreCondition:    RING_InitBuffer() must be successfully called
+ 
+ * Input:           ring the RING_DATA pre-allocated object
+ val the byte to write
+ 
+ * Return:          true if the byte is added succesfully
+ 
+ * Side Effects:    None
+ 
+ * Overview:        None
+ 
+ * Note:            None
+ *****************************************************************************/
+uint8_t * RING_GetBufferDirectly(RING_DATA * const ring, size_t *toRead, size_t size) {
+    uint8_t *ptr;
+    size_t readable;
+    
+    readable = RING_GetFullLinearSpace(ring);
+    
+    *toRead = min(readable, size);
+    ptr = &ring->buf[ring->tail];
+#ifdef POWER_2_OPTIMIZATION
+    ring->tail = (ring->tail + *toRead) & (ring->size - 1);
+#else
+    ring->tail = (ring->tail + *toRead) % ring->size;
+#endif
+    
+    return ptr;
+}
+
+/*****************************************************************************
  * Function:        RING_PickBytes(const RING_DATA *ring, uint8_t *buf, size_t len)
  
  * Description:     This function picks bytes without removing from the ring buffer
@@ -558,7 +594,7 @@ inline uint8_t RING_GetByteSimple(RING_DATA * const ring) {
                     buf the buffer where copy bytes
                     len the maximum number of bytes to read
  
- * Return:          the number of read bytes
+ * Return:          the actual number of picked bytes
  
  * Side Effects:    None
  
@@ -567,11 +603,12 @@ inline uint8_t RING_GetByteSimple(RING_DATA * const ring) {
  * Note:            None
  *****************************************************************************/
 size_t RING_PickBytes(const RING_DATA *ring, uint8_t *buf, size_t len) {
-    size_t i;
+    size_t i, min;
     size_t tail;
     
+    min = min(RING_GetFullSpace(ring), len);
     tail = ring->tail;
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < min; i++) {
         buf[i] = ring->buf[tail];
 #ifdef POWER_2_OPTIMIZATION
         tail = (tail + 1) & (ring->size - 1);
