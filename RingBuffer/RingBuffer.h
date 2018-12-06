@@ -1,19 +1,35 @@
-/* ************************************************************************** */
-/** Descriptive File Name
- 
+/** **************************************************************************
  @Company
- Company Name
+ LP Systems https://lpsystems.eu
  
  @File Name
- filename.h
+ RingBuffer.h
+ 
+ @Author
+ Luca Pascarella https://lucapascarella.com
  
  @Summary
- Brief description of the file.
+ These functions implement an optimized version of a ring buffer.
  
  @Description
- Describe the purpose of this file.
- */
-/* ************************************************************************** */
+ This file implements a C optimized version of a ring buffer. It allows a
+ combination of both ring and direct/linear access to the ring memory space.
+ A preprocessor directive must be used to select the base buffer
+ size that can be both POWER of 2 than arbitrary size.
+ 
+ @License
+ Copyright (C) 2016 LP Systems
+ 
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License. You may obtain a copy of the License at
+ 
+ https://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing, software distributed under the License
+ is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ or implied. See the License for the specific language governing permissions and limitations under
+ the License.
+ ************************************************************************** */
 
 #ifndef _RING_BUFFER_H    /* Guard against multiple inclusion */
 #define _RING_BUFFER_H
@@ -29,9 +45,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
-//#include "system_config.h"
-//#include "system_definitions.h"
-
 
 /* Provide C++ Compatibility */
 #ifdef __cplusplus
@@ -45,29 +58,6 @@ extern "C" {
     /* ************************************************************************** */
     /* ************************************************************************** */
     
-    /*  A brief description of a section can be given directly below the section
-     banner.
-     */
-    
-    
-    /* ************************************************************************** */
-    /** Descriptive Constant Name
-     
-     @Summary
-     Brief one-line summary of the constant.
-     
-     @Description
-     Full description, explaining the purpose and usage of the constant.
-     <p>
-     Additional description in consecutive paragraphs separated by HTML
-     paragraph breaks, as necessary.
-     <p>
-     Type "JavaDoc" in the "How Do I?" IDE toolbar for more information on tags.
-     
-     @Remarks
-     Any additional remarks
-     */
-
 #define POWER_2_OPTIMIZATION
     
 #define min(a,b)    (((a)<(b))?(a):(b))
@@ -123,7 +113,6 @@ extern "C" {
     uint8_t RING_GetByteSimple(RING_DATA * const ring);
     size_t RING_GetBuffer(RING_DATA * const ring, uint8_t *ptr, size_t len);
     uint8_t * RING_GetBufferDirectly(RING_DATA * const ring, size_t *toRead, size_t size);
-
     
     // Pick
     size_t RING_PickBytes(const RING_DATA *ring, uint8_t *buf, size_t len);

@@ -1,7 +1,7 @@
 # RingBuffer
 RingBuffer is an open-source, versatile, and optimized version of a ring buffer memory. It has been implemented in C to fit limited resource microcontrollers such as Microchip Inc. MCUs. This implementation allows both ring and linear access enabling standard functions to access the ring space. In addition, it is compatible with one-shot and cycling DMA modules.
 
-## Initialization
+## Examples
 ### Ring object creation
 
 The code is re-entrant and allows multiple instances. The returned 'object' handles a single instance.
@@ -29,7 +29,7 @@ This snippet reads _readable_ bytes from the ring buffer memory. With this techn
 uint8_t dest[16], *src;
 size_t readable;
 
-src = RING_GetLinearBuffer(ring, &readable, sizeof(dest));
+src = RING_GetBufferDirectly(ring, &readable, sizeof(dest));
 memcpy(dest, src, readable);
 ```
 

@@ -1,27 +1,36 @@
-/* ************************************************************************** */
-/** Descriptive File Name
- 
+
+/** **************************************************************************
  @Company
- LP Systems
- lpsystems.eu
+ LP Systems https://lpsystems.eu
  
  @File Name
  RingBuffer.c
  
  @Author
- Luca Pascarella
- lucapascarella.com
+ Luca Pascarella https://lucapascarella.com
  
  @Summary
- This functions provide the microcontroller optimized version of the basic
- functions for implmenting a ring buffer.
+ These functions implement an optimized version of a ring buffer.
  
  @Description
- This file and the associated header implement a C optimized version of a
- ring buffer. A preprocessor directive must be used to select the base buffer
+ This file implements a C optimized version of a ring buffer. It allows a
+ combination of both ring and direct/linear access to the ring memory space.
+ A preprocessor directive must be used to select the base buffer
  size that can be both POWER of 2 than arbitrary size.
- An optimized linear acceess also using a DMA peripheral can be used.
- */
+ 
+ @License
+ Copyright (C) 2016 LP Systems
+ 
+ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ in compliance with the License. You may obtain a copy of the License at
+ 
+ https://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing, software distributed under the License
+ is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ or implied. See the License for the specific language governing permissions and limitations under
+ the License.
+ ************************************************************************** */
 
 
 /* ************************************************************************** */
@@ -49,6 +58,7 @@
 // Returns the rounded down power of 2 of the given number
 
 #ifdef POWER_2_OPTIMIZATION
+
 static size_t RING_RoundDown(size_t x) {
     x = x | (x >> 1);
     x = x | (x >> 2);
@@ -69,12 +79,12 @@ static size_t RING_RoundDown(size_t x) {
  * Function:        RING_DATA * RING_InitBuffer(const uint8_t *buf, size_t size)
  
  * Description:     This function creates a RING_DATA object that allows circling the linear memory.
-                    A linearize access to ring space is provided through exposed functions.
+ A linearize access to ring space is provided through exposed functions.
  
  * PreCondition:    None
  
  * Input:           buf is the predefined ring buffer, NULL to require a dynamic allocation
-                    size is the size of the pre-allocated memory or the required memory
+ size is the size of the pre-allocated memory or the required memory
  
  * Return:          Pointer to a RING_DATA type allocated in the dynamic memory
  
@@ -83,7 +93,7 @@ static size_t RING_RoundDown(size_t x) {
  * Overview:        None
  
  * Note:            The macro POWER_2_OPTIMIZATION speeds up the ring buffer access
-                    by rounding down to the closed power of 2
+ by rounding down to the closed power of 2
  *****************************************************************************/
 RING_DATA * RING_InitBuffer(const uint8_t *buf, size_t size) {
     
@@ -106,12 +116,12 @@ RING_DATA * RING_InitBuffer(const uint8_t *buf, size_t size) {
     
     // Check if user already allocates memory
     if (buf == NULL) {
-        if((ring->buf = malloc(sizeof (char) * ring->size)) == NULL){
-            free((RING_DATA*)ring);
+        if ((ring->buf = malloc(sizeof (char) * ring->size)) == NULL) {
+            free((RING_DATA*) ring);
             return NULL;
         }
         ring->dymamic = true;
-    }else{
+    } else {
         ring->buf = (uint8_t*) buf;
         ring->dymamic = false;
     }
@@ -138,8 +148,8 @@ RING_DATA * RING_InitBuffer(const uint8_t *buf, size_t size) {
  *****************************************************************************/
 void RING_DeinitializeBuffer(const RING_DATA *ring) {
     if (ring->dymamic)
-        free((RING_DATA*)ring->buf);
-    free((RING_DATA*)ring);
+        free((RING_DATA*) ring->buf);
+    free((RING_DATA*) ring);
 }
 
 /*****************************************************************************
@@ -158,7 +168,7 @@ void RING_DeinitializeBuffer(const RING_DATA *ring) {
  * Overview:        None
  
  * Note:            The buffer size is always bigger than the maximum available free space
-                    To know free space use RING_GetFreeSpace() or RING_GetFreeLinearSpace()
+ To know free space use RING_GetFreeSpace() or RING_GetFreeLinearSpace()
  *****************************************************************************/
 inline size_t RING_GetBufferSize(const RING_DATA * const ring) {
     return ring->size;
@@ -203,12 +213,16 @@ inline size_t RING_GetFreeSpace(const RING_DATA * const ring) {
  * Note:            The linear free space may be less than RING_GetFreeSpace()
  *****************************************************************************/
 inline size_t RING_GetFreeLinearSpace(const RING_DATA * const ring) {
+    // TODO: Must be optimized
     if (ring->head == 0 && ring->tail == 0)
         return ring->size - 2; //
     else if (ring->head >= ring->tail)
-        return ring->size - ring->head;
-    else
-        return ring->tail - ring->head - 1;
+        if (ring->tail == 0)
+            return ring->size - ring->head - 1;
+        else
+            return ring->size - ring->head;
+        else
+            return ring->tail - ring->head - 1;
 }
 
 /*****************************************************************************
@@ -260,12 +274,12 @@ inline size_t RING_GetFullLinearSpace(const RING_DATA *ring) {
  * Function:        RING_IncreaseHead(RING_DATA * const ring, size_t count)
  
  * Description:     This function increments the ring head pointer. It allows
-                    manipulating internal pointers simulating a buffer write.
+ manipulating internal pointers simulating a buffer write.
  
  * PreCondition:    RING_InitBuffer() must be successfully called
  
  * Input:           ring the RING_DATA pre-allocated object
-                    count the size to add to the head of the
+ count the size to add to the head of the
  
  * Return:          None
  
@@ -287,7 +301,7 @@ inline void RING_IncreaseHead(RING_DATA * const ring, size_t count) {
  * Function:        RING_IncreaseTail(RING_DATA * const ring, size_t count)
  
  * Description:     This function increments the ring tail pointer. It allows.
-                    manipulating internal pointers simulating a buffer read
+ manipulating internal pointers simulating a buffer read
  
  * PreCondition:    RING_InitBuffer() must be successfully called
  
@@ -362,7 +376,7 @@ inline uint8_t * RING_GetTailPointer(const RING_DATA * const ring) {
  * Input:           ring the RING_DATA pre-allocated object
  val the byte to write
  
- * Return:          true if the byte is added succesfully
+ * Return:          true if the byte is added successfully
  
  * Side Effects:    None
  
@@ -391,8 +405,8 @@ bool RING_AddByte(RING_DATA * const ring, uint8_t val) {
  * PreCondition:    RING_InitBuffer() must be successfully called
  
  * Input:           ring the RING_DATA pre-allocated object
-                    buf pointer of the buffer to copy
-                    size number of bytes to copy
+ buf pointer of the buffer to copy
+ size number of bytes to copy
  
  * Return:          The number of actual bytes copied
  
@@ -413,7 +427,7 @@ size_t RING_AddBuffer(RING_DATA * const ring, uint8_t *buf, size_t size) {
 #else
         ring->head = (ring->head + 1) % ring->size;
 #endif
-
+        
     }
     return i;
 }
@@ -421,13 +435,13 @@ size_t RING_AddBuffer(RING_DATA * const ring, uint8_t *buf, size_t size) {
 /*****************************************************************************
  * Function:        RING_AddBufferDirectly(RING_DATA * const ring, size_t *toWrite, size_t size)
  
- * Description:     This function allows an external function to directly write into a linear space of the ring byffer.
+ * Description:     This function allows an external function to directly write into a linear space of the ring buffer.
  
  * PreCondition:    RING_InitBuffer() must be successfully called
  
  * Input:           ring the RING_DATA pre-allocated object
-                    toWrite number of byte that must be copied
-                    size number of required bytes
+ toWrite number of byte that must be copied
+ size number of required bytes
  
  * Return:          The pointer of the first free location. It can be used by an external function to directly write into ring buffer
  
@@ -459,7 +473,7 @@ uint8_t * RING_AddBufferDirectly(RING_DATA * const ring, size_t *toWrite, size_t
  * PreCondition:    RING_InitBuffer() must be successfully called
  
  * Input:           ring the RING_DATA pre-allocated object
- byte* readback byta
+ byte* read back byte
  
  * Return:          true if the byte is read
  
@@ -498,7 +512,7 @@ bool RING_GetByte(RING_DATA * const ring, uint8_t *byte) {
  
  * Overview:        None
  
- * Note:            The user must check the byte aveability
+ * Note:            The user must check the byte availability
  *****************************************************************************/
 inline uint8_t RING_GetByteSimple(RING_DATA * const ring) {
     uint8_t temp;
@@ -519,8 +533,8 @@ inline uint8_t RING_GetByteSimple(RING_DATA * const ring) {
  * PreCondition:    RING_InitBuffer() must be successfully called
  
  * Input:           ring the RING_DATA pre-allocated object
-                    ptr user destination buffer
-                    len user destination length
+ ptr user destination buffer
+ len user destination length
  
  * Return:          the actual number of got bytes
  
@@ -530,7 +544,7 @@ inline uint8_t RING_GetByteSimple(RING_DATA * const ring) {
  
  * Note:            None
  *****************************************************************************/
-size_t RING_GetBuffer(RING_DATA * const ring, uint8_t *ptr, size_t len){
+size_t RING_GetBuffer(RING_DATA * const ring, uint8_t *ptr, size_t len) {
     
     size_t i, min;
     
@@ -558,7 +572,7 @@ size_t RING_GetBuffer(RING_DATA * const ring, uint8_t *ptr, size_t len){
  * Input:           ring the RING_DATA pre-allocated object
  val the byte to write
  
- * Return:          true if the byte is added succesfully
+ * Return:          true if the byte is added successfully
  
  * Side Effects:    None
  
@@ -591,8 +605,8 @@ uint8_t * RING_GetBufferDirectly(RING_DATA * const ring, size_t *toRead, size_t 
  * PreCondition:    RING_InitBuffer() must be successfully called
  
  * Input:           ring the RING_DATA pre-allocated object
-                    buf the buffer where copy bytes
-                    len the maximum number of bytes to read
+ buf the buffer where copy bytes
+ len the maximum number of bytes to read
  
  * Return:          the actual number of picked bytes
  
@@ -618,10 +632,6 @@ size_t RING_PickBytes(const RING_DATA *ring, uint8_t *buf, size_t len) {
     }
     return i;
 }
-
-
-
-
 
 
 /* *****************************************************************************
