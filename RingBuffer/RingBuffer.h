@@ -60,8 +60,9 @@ extern "C" {
     
 #define POWER_2_OPTIMIZATION
     
+#ifndef min
 #define min(a,b)    (((a)<(b))?(a):(b))
-    
+#endif
     
     // *****************************************************************************
     // *****************************************************************************
@@ -70,11 +71,11 @@ extern "C" {
     // *****************************************************************************
     
     typedef struct {
-        uint8_t * buf;
-        size_t head;
-        size_t tail;
-        size_t size;
-        bool dymamic;
+        uint8_t * buf; // Buffer pointer
+        size_t head; // Refers to the first free byte into the buf
+        size_t tail; // Refers to the first occupied byte into the buf
+        size_t size; // Buffer size. It is always bigger than free bytes
+        bool dymamic; // It is true when the user delegates the creation of buf
     } RING_DATA;
     
     

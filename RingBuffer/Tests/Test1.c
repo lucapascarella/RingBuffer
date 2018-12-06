@@ -88,21 +88,18 @@ bool Test_Size(void) {
 
 bool Test_FreeSpace(void) {
     RING_DATA *ring;
-    size_t free, freeLinear;
+    size_t size, diff, free, freeLinear;
     bool rtn = true;
     
-    ring = RING_InitBuffer(NULL, 17);
+    size = 22;
+    ring = RING_InitBuffer(NULL, size);
     rtn &= (ring != NULL);
+    diff = size - ring->size;
     
     free = RING_GetFreeSpace(ring);
     freeLinear = RING_GetFreeLinearSpace(ring);
-#ifdef POWER_2_OPTIMIZATION
-    rtn &= (free == 15);
-    rtn &= (freeLinear == 14);
-#else
-    rtn &= (free == 16);
-    rtn &= (freeLinear == 15);
-#endif
+    rtn &= (free == size - diff - 1);
+    rtn &= (freeLinear == size - diff - 1);
     RING_DeinitializeBuffer(ring);
     
     return rtn;
@@ -118,13 +115,104 @@ bool Test_FullSpace(void) {
     
     full = RING_GetFullSpace(ring);
     fullLinear = RING_GetFullLinearSpace(ring);
-#ifdef POWER_2_OPTIMIZATION
     rtn &= (full == 0);
     rtn &= (fullLinear == 0);
-#else
-    rtn &= (full == 0);
-    rtn &= (fullLinear == 0);
-#endif
+    RING_DeinitializeBuffer(ring);
+    
+    return rtn;
+}
+
+bool Test_Space(void) {
+    RING_DATA *ring;
+    size_t size, diff, i;
+    bool rtn = true;
+    
+    size = 5;
+    ring = RING_InitBuffer(NULL, size);
+    rtn &= (ring != NULL);
+    diff = size - ring->size;
+    
+    for (i = 0; i < size - 1 - diff; i++) {
+        rtn &= (RING_GetFreeSpace(ring) == size - i - 1 - diff);
+        rtn &= (RING_GetFreeLinearSpace(ring) == size - i - 1 - diff);
+        rtn &= (RING_GetFullSpace(ring) == i);
+        rtn &= (RING_GetFullLinearSpace(ring) == i);
+        RING_IncreaseHead(ring, 1);
+    }
+    rtn &= (RING_GetFreeSpace(ring) == size - i - 1 - diff);
+    rtn &= (RING_GetFreeLinearSpace(ring) == size - i - 1 - diff);
+    rtn &= (RING_GetFullSpace(ring) == i);
+    rtn &= (RING_GetFullLinearSpace(ring) == i);
+    
+    RING_DeinitializeBuffer(ring);
+    
+    return rtn;
+}
+
+bool Test_SpaceAdvanced(void) {
+    RING_DATA *ring;
+    size_t size, i;
+    bool rtn = true;
+    
+    size = 5;
+    ring = RING_InitBuffer(NULL, size);
+    rtn &= (ring != NULL);
+    
+    RING_IncreaseTail(ring, 2);
+    RING_IncreaseHead(ring, 2);
+    
+    for (i = 0; i < ring->size - 1 - 2; i++) {
+        rtn &= (RING_GetFreeSpace(ring) == ring->size - i - 1);
+        rtn &= (RING_GetFreeLinearSpace(ring) == ring->size - i - 2);
+        rtn &= (RING_GetFullSpace(ring) == i);
+        rtn &= (RING_GetFullLinearSpace(ring) == i);
+        RING_IncreaseHead(ring, 1);
+    }
+    rtn &= (RING_GetFreeSpace(ring) == ring->size - i - 1);
+    rtn &= (RING_GetFreeLinearSpace(ring) == 1);
+    rtn &= (RING_GetFullSpace(ring) == i);
+    rtn &= (RING_GetFullLinearSpace(ring) == i);
+    
+    
+    size = 5;
+    ring = RING_InitBuffer(NULL, size);
+    rtn &= (ring != NULL);
+    
+    RING_IncreaseTail(ring, 3);
+    RING_IncreaseHead(ring, 3);
+    
+    rtn &= (RING_GetFreeSpace(ring) == ring->size - 1);
+    rtn &= (RING_GetFreeLinearSpace(ring) == 1);
+    rtn &= (RING_GetFullSpace(ring) == 0);
+    rtn &= (RING_GetFullLinearSpace(ring) == 0);
+    
+    RING_IncreaseHead(ring, 1);
+    
+    rtn &= (RING_GetFreeSpace(ring) == ring->size - 2);
+    rtn &= (RING_GetFreeLinearSpace(ring) == 2);
+    rtn &= (RING_GetFullSpace(ring) == 1);
+    rtn &= (RING_GetFullLinearSpace(ring) == 1);
+    
+    RING_DeinitializeBuffer(ring);
+    
+    size = 5;
+    ring = RING_InitBuffer(NULL, size);
+    rtn &= (ring != NULL);
+    
+    RING_IncreaseTail(ring, 2);
+    
+    rtn &= (RING_GetFreeSpace(ring) == 1);
+    rtn &= (RING_GetFreeLinearSpace(ring) == 1);
+    rtn &= (RING_GetFullSpace(ring) == 2);
+    rtn &= (RING_GetFullLinearSpace(ring) == 2);
+    
+    RING_IncreaseHead(ring, 1);
+    
+    rtn &= (RING_GetFreeSpace(ring) == 0);
+    rtn &= (RING_GetFreeLinearSpace(ring) == 0);
+    rtn &= (RING_GetFullSpace(ring) == 3);
+    rtn &= (RING_GetFullLinearSpace(ring) == 2);
+    
     RING_DeinitializeBuffer(ring);
     
     return rtn;
@@ -160,34 +248,26 @@ bool Test_MultipleFill(void) {
     RING_DATA *ring;
     char buf1[] = "0123456789ABCDEFGHIJKLMONPQRSTUVWXYZ";
     char buf2[sizeof (buf1)];
-    size_t free, full, ia, ig, added, got;
+    size_t size, diff, free, full, ia, ig, added, got;
     bool rtn = true;
     
+    size = 23;
     ring = RING_InitBuffer(NULL, 9);
     rtn &= (ring != NULL);
+    diff = size - ring->size;
     
     ia = ig = 0;
     do {
-        free = RING_GetFreeSpace(ring);
-        full = RING_GetFullSpace(ring);
-#ifdef POWER_2_OPTIMIZATION
-        rtn &= (free == 7);
-#else
-        rtn &= (free == 8);
-#endif
-        rtn &= (full == 0);
+        rtn &= (RING_GetFreeSpace(ring) == size - diff - 1);
+        rtn &= (RING_GetFullSpace(ring) == 0);
         
         added = RING_AddBuffer(ring, (uint8_t*) & buf1[ia], strlen(buf1));
-        free = RING_GetFreeSpace(ring);
-        full = RING_GetFullSpace(ring);
-#ifdef POWER_2_OPTIMIZATION
-        rtn &= (full == 7);
-#else
-        rtn &= (full == 8);
-#endif
-        rtn &= (free == 0);
+        
+        rtn &= (RING_GetFreeSpace(ring) == 0);
+        rtn &= (RING_GetFullSpace(ring) == size - diff - 1);
         
         got = RING_GetBuffer(ring, (uint8_t*) & buf2[ig], added);
+        
         ia += added;
         ig += got;
         rtn &= (added == got);
@@ -204,7 +284,7 @@ static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012
 
 bool Test_MultipleFillLong(void) {
     RING_DATA *ring;
-    int testSize, i, key;
+    int testSize, diff, i, key;
     char buffer[9];
     char *src, *dst;
     size_t ia, ig, read;
@@ -223,6 +303,7 @@ bool Test_MultipleFillLong(void) {
     
     ring = RING_InitBuffer((uint8_t*) buffer, sizeof (buffer));
     rtn &= (ring != NULL);
+    diff = (int) testSize - ring->size;
     
     ia = ig = 0;
     do {

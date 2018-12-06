@@ -51,6 +51,8 @@ extern "C" {
     bool Test_Size(void);
     bool Test_FreeSpace(void);
     bool Test_FullSpace(void);
+    bool Test_Space(void);
+    bool Test_SpaceAdvanced(void);
     bool Test_FillAll(void);
     bool Test_MultipleFill(void);
     bool Test_MultipleFillLong(void);

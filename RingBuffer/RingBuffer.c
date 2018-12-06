@@ -192,7 +192,11 @@ inline size_t RING_GetBufferSize(const RING_DATA * const ring) {
  * Note:            The free space may not be linear
  *****************************************************************************/
 inline size_t RING_GetFreeSpace(const RING_DATA * const ring) {
+#ifdef POWER_2_OPTIMIZATION
+    return ((ring->tail + ring->size - ring->head - 1) & ring->size - 1);
+#else
     return ((ring->tail + ring->size - ring->head - 1) % ring->size + 1) - 1;
+#endif
 }
 
 /*****************************************************************************
@@ -213,16 +217,14 @@ inline size_t RING_GetFreeSpace(const RING_DATA * const ring) {
  * Note:            The linear free space may be less than RING_GetFreeSpace()
  *****************************************************************************/
 inline size_t RING_GetFreeLinearSpace(const RING_DATA * const ring) {
-    // TODO: Must be optimized
-    if (ring->head == 0 && ring->tail == 0)
-        return ring->size - 2; //
-    else if (ring->head >= ring->tail)
+    if (ring->head >= ring->tail) {
         if (ring->tail == 0)
             return ring->size - ring->head - 1;
         else
             return ring->size - ring->head;
-        else
-            return ring->tail - ring->head - 1;
+    } else {
+        return ring->tail - ring->head - 1;
+    }
 }
 
 /*****************************************************************************
@@ -243,7 +245,12 @@ inline size_t RING_GetFreeLinearSpace(const RING_DATA * const ring) {
  * Note:            The filled space may be not linear
  *****************************************************************************/
 inline size_t RING_GetFullSpace(const RING_DATA * const ring) {
+#ifdef POWER_2_OPTIMIZATION
+    return ring->size - ((ring->tail + ring->size - ring->head - 1) & ring->size - 1) - 1;
+#else
     return ring->size - ((ring->tail + ring->size - ring->head - 1) % ring->size + 1);
+#endif
+    
 }
 
 /*****************************************************************************
