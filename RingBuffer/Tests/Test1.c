@@ -182,14 +182,18 @@ bool Test_SpaceAdvanced(void) {
     RING_IncreaseHead(ring, 3);
     
     rtn &= (RING_GetFreeSpace(ring) == ring->size - 1);
-    rtn &= (RING_GetFreeLinearSpace(ring) == 1);
+    rtn &= (RING_GetFreeLinearSpace(ring) == ring->size - 3);
     rtn &= (RING_GetFullSpace(ring) == 0);
     rtn &= (RING_GetFullLinearSpace(ring) == 0);
     
     RING_IncreaseHead(ring, 1);
     
     rtn &= (RING_GetFreeSpace(ring) == ring->size - 2);
-    rtn &= (RING_GetFreeLinearSpace(ring) == 2);
+#ifdef POWER_2_OPTIMIZATION
+    rtn &= (RING_GetFreeLinearSpace(ring) == ring->size - 2);
+#else
+    rtn &= (RING_GetFreeLinearSpace(ring) == ring->size - 4);
+#endif
     rtn &= (RING_GetFullSpace(ring) == 1);
     rtn &= (RING_GetFullLinearSpace(ring) == 1);
     
@@ -203,15 +207,15 @@ bool Test_SpaceAdvanced(void) {
     
     rtn &= (RING_GetFreeSpace(ring) == 1);
     rtn &= (RING_GetFreeLinearSpace(ring) == 1);
-    rtn &= (RING_GetFullSpace(ring) == 2);
-    rtn &= (RING_GetFullLinearSpace(ring) == 2);
+    rtn &= (RING_GetFullSpace(ring) == ring->size - 2);
+    rtn &= (RING_GetFullLinearSpace(ring) == ring->size - 2);
     
     RING_IncreaseHead(ring, 1);
     
     rtn &= (RING_GetFreeSpace(ring) == 0);
     rtn &= (RING_GetFreeLinearSpace(ring) == 0);
-    rtn &= (RING_GetFullSpace(ring) == 3);
-    rtn &= (RING_GetFullLinearSpace(ring) == 2);
+    rtn &= (RING_GetFullSpace(ring) == ring->size - 1);
+    rtn &= (RING_GetFullLinearSpace(ring) == ring->size - 2);
     
     RING_DeinitializeBuffer(ring);
     

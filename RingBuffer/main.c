@@ -36,8 +36,6 @@
 #include "Test1.h"
 #include "RingBuffer.h"
 
-#define SPACE_SIZE      8
-
 void printb(uint8_t *buf, size_t size);
 void testLinearSpaces(RING_DATA *ring);
 void test1(void);
